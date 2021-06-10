@@ -15,7 +15,7 @@
 */ 
 import * as React from 'react';
 import StoreContext from '../../lib/stores/context'
-import { capitalize } from '../../lib/util'
+import { capitalize, getUserInfo, hasRole } from '../../lib/util'
 
 import Grid from '@material-ui/core/Grid';
 import LoadingMessage from '../LoadingMessage';
@@ -25,6 +25,7 @@ import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 import MetadataView from '../MetadataView';
 
+const isAdmin = hasRole(getUserInfo(), 'admin');
 
 export interface ModelDetailProps {
   setRunLink?: Function
@@ -92,7 +93,7 @@ export default class ModelDetail extends React.Component<ModelDetailProps, Model
     const API = api.value || api.default
     const KFP = kfp.value || kfp.default
     const { execute } = store.settings.capabilities
-    const canRun = execute.value || execute.default
+    const canRun = execute.value !== null ? execute.value : execute.default
     const setRunLink = this.props.setRunLink
 
     const model = this.state.model
@@ -119,7 +120,7 @@ export default class ModelDetail extends React.Component<ModelDetailProps, Model
                 value="detail" 
                 label="Details" 
               />
-              {canRun &&
+              {canRun && isAdmin &&
                 <Tab 
                   className="comp-tab"
                   value="runCreation" 

@@ -167,7 +167,7 @@ from urllib3.response import HTTPResponse
 
 # create an instance of the API class
 api_instance = swagger_client.ModelServiceApi()
-model_id = 'max-audio-classifier'  # str | 
+model_id = 'max-audio-classifier'  # str
 include_generated_code = True  # bool | Include generated run scripts in download (optional) (default to false)
 tarfile_path = f'download/{model_id}.tgz'
 
@@ -192,7 +192,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**file**](file.md)
+**file**
 
 ### Authorization
 

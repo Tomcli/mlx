@@ -15,6 +15,7 @@
 */ 
 import * as React from 'react';
 import StoreContext from '../../lib/stores/context'
+import { getUserInfo, hasRole } from '../../lib/util';
 
 import Grid from '@material-ui/core/Grid'
 import SourceCodeDisplay from '../SourceCodeDisplay'
@@ -25,6 +26,7 @@ import Tabs from '@material-ui/core/Tabs'
 import Tab from '@material-ui/core/Tab'
 import Typography from '@material-ui/core/Typography'
 
+const isAdmin = hasRole(getUserInfo(), 'admin');
 
 export interface ComponentDetailProps {
   setRunLink?: Function
@@ -73,7 +75,7 @@ export default class ComponentDetail extends React.Component<ComponentDetailProp
   public render() {
     const { store } = this.context
     const { execute } = store.settings.capabilities
-    const canRun = execute.value || execute.default
+    const canRun = execute.value !== null ? execute.value : execute.default
     const setRunLink = this.props.setRunLink
 
     const component = this.state.component
@@ -98,7 +100,7 @@ export default class ComponentDetail extends React.Component<ComponentDetailProp
                 value="detail" 
                 label="Details" 
               />
-              {canRun &&
+              {canRun && isAdmin &&
                 <Tab 
                   className="comp-tab"
                   value="runCreation" 
@@ -149,7 +151,8 @@ export default class ComponentDetail extends React.Component<ComponentDetailProp
             />
           }
           { this.state.leftTab === 'runCreation' &&
-            <RunView type={'components'} asset={component} setRunLink={setRunLink}/> }
+            <RunView type={'components'} asset={component} setRunLink={setRunLink}/> 
+          }
         </Grid>
         <Grid 
           className="right-wrapper"

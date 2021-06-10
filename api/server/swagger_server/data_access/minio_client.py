@@ -191,6 +191,17 @@ def get_object_url(bucket_name, prefix, file_extensions: [str], file_name_filter
     return None
 
 
+def delete_object(bucket_name, prefix, file_name):
+    client = _get_minio_client()
+    try:
+        object_name = f"{prefix.rstrip('/')}/{file_name}"
+        client.remove_object(bucket_name, object_name)
+        return True
+    except NoSuchKey as e:
+        print(e.message)
+        return False
+
+
 def delete_objects(bucket_name, prefix):
     client = _get_minio_client()
     try:
@@ -198,7 +209,7 @@ def delete_objects(bucket_name, prefix):
             prefix = prefix[:-2]
 
         objects = client.list_objects(bucket_name, prefix=prefix, recursive=True)
-        object_names = [obj.object_name for obj in objects  if not obj.is_dir]
+        object_names = [obj.object_name for obj in objects if not obj.is_dir]
         maybe_errors = client.remove_objects(bucket_name, object_names)
         actual_errors = [(e.object_name, e.error_code, e.error_message) for e in maybe_errors]
 
@@ -225,7 +236,7 @@ def _update_bucket_policy(bucket_name: str, prefix: str):
     except NoSuchBucketPolicy:
         bucket_policy = dict(_bucket_policy_template)
 
-    getobject_stmts = [s for s in bucket_policy["Statement"] if s["Sid"] == _bucket_policy_sid] or \
+    getobject_stmts = [s for s in bucket_policy["Statement"] if s.get("Sid") == _bucket_policy_sid] or \
                       [s for s in bucket_policy["Statement"] if "s3:GetObject" in s["Action"]]
 
     if not getobject_stmts:

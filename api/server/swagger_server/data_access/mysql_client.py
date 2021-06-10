@@ -23,7 +23,7 @@ from mysql.connector import connect, errorcode, Error
 from mysql.connector.errors import IntegrityError
 from os import environ as env
 from random import choice
-from string import ascii_letters, digits
+from string import ascii_letters, digits, hexdigits
 from swagger_server.models.base_model_ import Model
 from swagger_server.models import *  # required for dynamic Api ...Extension class loading during View-table creation
 from swagger_server.util import _deserialize, ApiError
@@ -38,6 +38,7 @@ _user = 'root'
 
 existing_tables = dict()
 
+# map Python data types of the Swagger model object's attributes to MySQL column types
 type_map = {
     str: 'varchar(255)',
     int: 'int(11)',
@@ -47,12 +48,16 @@ type_map = {
     Model: 'longtext',
     datetime: 'bigint(20)'
 }
+# some attributes do not comply to the defaults in the type_map
+swagger_attr_to_mysql_type = {
+    'namespace': 'varchar(63)'
+}
 
+# some Swagger attributes names have special MySQL column names (KFP idiosyncrasy)
 field_name_swagger_to_mysql = {
     'id': 'UUID',
     'created_at': 'CreatedAtInSec'
 }
-
 field_name_mysql_to_swagger = {v: k for (k, v) in field_name_swagger_to_mysql.items()}  # Note: overrides duplicates
 
 
@@ -158,7 +163,8 @@ def generate_id(name: str = None, length: int = 36) -> str:
         # return name.lower().replace(" ", "-").replace("---", "-").replace("-–-", "–")
         return sanitize_k8s_name(name)
     else:
-        return ''.join([choice(ascii_letters + digits + '-') for n in range(length)])
+        # return ''.join([choice(ascii_letters + digits + '-') for n in range(length)])
+        return ''.join([choice(hexdigits) for n in range(length)]).lower()
 
 
 ##############################################################################
@@ -384,7 +390,8 @@ def _validate_schema(table_name: str, swagger_class):
         if p.name == "self":
             continue
         col_name = _convert_attr_name_to_col_name(p.name)
-        col_type = _get_mysql_type_declaration(p.annotation)
+        col_type = swagger_attr_to_mysql_type.get(p.name) or \
+                   _get_mysql_type_declaration(p.annotation)
 
         # hack, TODO: find a more generic solution to custom map columns to types by table
         if issubclass(swagger_class, ApiPipeline) and col_name == "Description":
@@ -628,10 +635,12 @@ def delete_data(swagger_class: type, id: str) -> bool:
         # until we have a proper schema migration, use this opportunity to force recreating of the table later
         if table_name.endswith("extended"):
             sql = f"DROP VIEW IF EXISTS `{table_name}`"
+        elif table_name in ["pipelines", "pipeline_versions"]:
+            sql = f"DELETE FROM `{table_name}`"
         else:
             sql = f"DROP TABLE IF EXISTS `{table_name}`"
 
-        if table_name in existing_tables:
+        if sql.startswith("DROP ") and table_name in existing_tables:
             existing_tables.pop(table_name)
 
     else:
@@ -685,6 +694,12 @@ def load_data(swagger_class: type, filter_dict: dict = None, sort_by: str = None
         cursor.execute(query)
 
         swagger_attr_names = [_convert_col_name_to_attr_name(c) for c in cursor.column_names]
+
+        assert set(swagger_attr_names) <= set(sig.parameters.keys()), \
+            f"Mismatch between database schema and API spec for {table_name}. " \
+            f"Expected columns: {[_convert_attr_name_to_col_name(k) for k in sig.parameters.keys() if k != 'self']}. " \
+            f"Database columns: {cursor.column_names}"
+
         swagger_attr_types = [sig.parameters.get(a).annotation for a in swagger_attr_names]
 
         for row_values in cursor:

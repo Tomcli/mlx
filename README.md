@@ -1,14 +1,37 @@
-[![Build Status](https://travis.com/machine-learning-exchange/mlx.svg?branch=main)](https://github.com/machine-learning-exchange/mlx)
+[![Build Status](https://travis-ci.com/machine-learning-exchange/mlx.svg?branch=main)](https://travis-ci.com/machine-learning-exchange/mlx)
+[![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/4862/badge)](https://bestpractices.coreinfrastructure.org/projects/4862)
 
-# Machine Learning Exchange (MLX)
+# Machine Learning eXchange (MLX)
 
-**Data and AI Assets Catalog and Execution Engine**
+**Data and AI Assets Catalog and Execution Engine** 
 
-![mlx-landing-page](docs/images/mlx.png)
+Allows upload, registration, execution, and deployment of:
+ - AI pipelines and pipeline components
+ - Models
+ - Datasets
+ - Notebooks
+
+<img src="docs/images/mlx.png" height="90%" width="90%">
+
+Additionally it provides:
+
+ - Automated sample pipeline code generation to execute registered models, datasets and notebooks
+ - Pipelines engine powered by Kubeflow Pipelines on Tekton, core of Watson Pipelines
+ - Components registry for Kubeflow Pipelines
+ - Datasets management by Datashim
+ - Preregistered Datasets from Data Asset Exchange (DAX) and Models from Model Asset Exchange (MAX)
+ - Serving engine by KFServing
+ - Model Metadata schemas
 
 ## 1. Prerequisites
 
-* An existing Kubernetes cluster. Version 1.16+
+#### Quickstart (MLX Asset Catalog Only)
+* [Docker Compose](https://docs.docker.com/compose/install/)
+* 4 GB of memory
+* 10 GB of free storage
+
+#### Cluster Deployment (MLX Asset Catalog and Execution Engine)
+* An existing Kubernetes cluster. Version 1.17+
 * The minimum capacity requirement for MLX is 8 vCPUs and 16GB RAM
 * If you are using IBM Cloud, follow the appropriate instructions for standing up your Kubernetes cluster using [IBM Cloud Public](https://cloud.ibm.com/docs/containers?topic=containers-cs_cluster_tutorial#cs_cluster_tutorial)
 * If you are using OpenShift on IBM Cloud, please follow the instructions for standing up your [IBM Cloud Red Hat OpenShift cluster](https://cloud.ibm.com/docs/containers?topic=containers-openshift_tutorial)
@@ -17,13 +40,20 @@
 ## 2. Deployment
 <img src="docs/images/mlx-architecture-4.png" height="40%" width="40%">
 
-For Deployment, we are going to use an Operator based on [Kubeflow Operator](https://www.kubeflow.org/docs/operator/introduction/) architecture. You can install the operator manually or via OperatorHub. Both should achieve the same result. Choose any one of them.
+For a simple up-and-running MLX with asset catalog only, we created a [Quickstart Guide](./quickstart) using [Docker Compose](https://docs.docker.com/compose/install/).
 
-### [Manual Installation using Operator](./docs/mlx-install-operator.md)
+For a full deployment, use an Operator based on the [Kubeflow Operator](https://www.kubeflow.org/docs/operator/introduction/) architecture. 
+
+* #### [MLX (Asset Catalog Only) using Docker Compose](./quickstart)
+
+* #### [MLX deployment with Kubeflow](./docs/mlx-install-with-kubeflow.md)
+
+* #### [MLX on an existing Kubeflow Cluster](./docs/install-mlx-on-kubeflow.md)
+
 
 ## 3. Access the MLX UI
 
-1. By default the MLX UI is available at <public-ip-of-node>:31380/os
+1. By default the MLX UI is available at <public-ip-of-node>:30380/os
 
 To find the public ip of a node of your cluster
 
@@ -58,7 +88,7 @@ oc get route -n istio-system
     - [Create Model Metadata](./models/README.md#Create-Model-Metadata)
     - [Register Model](./models/README.md#Register-Model)
     - [Use Models in Pipelines](./models/README.md#Use-Models-in-Pipelines)
-    - [Model Metadata Template](./models/template/model.yaml)
+    - [Model Metadata Template](./models/template.yaml)
 
 4. [Notebooks](./notebooks/README.md)
     - [Create Notebooks](./notebooks/README.md#Create-Notebooks)
